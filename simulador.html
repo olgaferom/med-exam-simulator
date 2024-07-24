@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Visual de Exploración Física</title>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        const Button = ({ children, onClick, variant, disabled, className }) => (
+            <button
+                onClick={onClick}
+                disabled={disabled}
+                className={`px-4 py-2 rounded ${
+                    variant === "secondary"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-200 text-gray-800"
+                } ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${className}`}
+            >
+                {children}
+            </button>
+        );
+
+        const Alert = ({ children, variant }) => (
+            <div className={`p-4 mb-4 rounded ${
+                variant === "destructive" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"
+            }`}>
+                {children}
+            </div>
+        );
+
+        const instrumentos = [
+            { nombre: "Mano", icono: "👋" },
+            { nombre: "Fonendoscopio", icono: "🩺" },
+            { nombre: "Oftalmoscopio", icono: "👁️" },
+            { nombre: "Otoscopio", icono: "👂" },
+            { nombre: "Martillo", icono: "🔨" },
+            { nombre: "Vista", icono: "👀" }
+        ];
+
+        const zonasExploracion = [
+            { nombre: "Cabeza", x: 50, y: 15, normal: "Sin anomalías visibles", anormal: "Asimetría facial" },
+            { nombre: "Corazón", x: 45, y: 35, normal: "Ritmo regular, sin soplos", anormal: "Soplo sistólico grado II/VI" },
+            { nombre: "Pulmones", x: 55, y: 35, normal: "Murmullo vesicular conservado", anormal: "Crepitantes en base derecha" },
+            { nombre: "Abdomen", x: 50, y: 55, normal: "Blando, depresible, no doloroso", anormal: "Dolor a la palpación en fosa ilíaca derecha" },
+            { nombre: "Extremidades", x: 30, y: 80, normal: "Movilidad y fuerza conservadas", anormal: "Disminución de fuerza en miembro inferior derecho" }
+        ];
+
+        const SimuladorExploracionFisica = () => {
+            const [instrumentoSeleccionado, setInstrumentoSeleccionado] = useState(null);
+            const [zonaSeleccionada, setZonaSeleccionada] = useState(null);
+            const [hallazgo, setHallazgo] = useState("");
+            const [esNormal, setEsNormal] = useState(true);
+
+            const seleccionarInstrumento = (instrumento) => {
+                setInstrumentoSeleccionado(instrumento);
+                setZonaSeleccionada(null);
+                setHallazgo("");
+            };
+
+            const explorarZona = (zona) => {
+                if (!instrumentoSeleccionado) return;
+                
+                setZonaSeleccionada(zona);
+                const esNormalAleatorio = Math.random() > 0.3;
+                setEsNormal(esNormalAleatorio);
+                setHallazgo(esNormalAleatorio ? zona.normal : zona.anormal);
+            };
+
+            return (
+                <div className="p-4 max-w-4xl mx-auto">
+                    <h1 className="text-3xl font-bold mb-6 text-center">Simulador Visual de Exploración Física</h1>
+                    
+                    <div className="flex flex-col md:flex-row mb-4">
+                        <div className="w-full md:w-1/3 mb-4 md:mb-0">
+                            <h2 className="text-xl mb-2 font-semibold">Instrumentos</h2>
+                            <div className="grid grid-cols-2 gap-2">
+                                {instrumentos.map((instrumento) => (
+                                    <Button 
+                                        key={instrumento.nombre} 
+                                        onClick={() => seleccionarInstrumento(instrumento)}
+                                        variant={instrumentoSeleccionado === instrumento ? "secondary" : "outline"}
+                                    >
+                                        {instrumento.icono} {instrumento.nombre}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+                        
+                        <div className="w-full md:w-2/3 relative" style={{height: '400px'}}>
+                            <div className="absolute inset-0 border-2 border-gray-300 rounded-lg overflow-hidden">
+                                {/* Representación del paciente */}
+                                <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full">
+                                    {/* Cuerpo */}
+                                    <rect x="30" y="20" width="40" height="60" fill="#f4a261" rx="5" />
+                                    {/* Cabeza */}
+                                    <circle cx="50" cy="15" r="10" fill="#f4a261" />
+                                    {/* Brazos */}
+                                    <rect x="20" y="25" width="10" height="40" fill="#f4a261" rx="5" />
+                                    <rect x="70" y="25" width="10" height="40" fill="#f4a261" rx="5" />
+                                    {/* Piernas */}
+                                    <rect x="35" y="80" width="12" height="20" fill="#f4a261" rx="5" />
+                                    <rect x="53" y="80" width="12" height="20" fill="#f4a261" rx="5" />
+                                </svg>
+                                
+                                {/* Zonas de exploración */}
+                                {zonasExploracion.map((zona) => (
+                                    <button
+                                        key={zona.nombre}
+                                        className="absolute transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-blue-500 bg-opacity-50 hover:bg-opacity-75 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-opacity-50 transition-all duration-200 ease-in-out"
+                                        style={{left: `${zona.x}%`, top: `${zona.y}%`}}
+                                        onClick={() => explorarZona(zona)}
+                                        disabled={!instrumentoSeleccionado}
+                                    >
+                                        <span className="sr-only">{zona.nombre}</span>
+                                    </button>
+                                ))}
+                                
+                                {/* Representación del médico */}
+                                <svg viewBox="0 0 50 100" className="absolute bottom-0 right-0 w-20 h-40">
+                                    {/* Cuerpo */}
+                                    <rect x="15" y="40" width="20" height="50" fill="#2a9d8f" rx="5" />
+                                    {/* Cabeza */}
+                                    <circle cx="25" cy="35" r="10" fill="#f4a261" />
+                                    {/* Brazos */}
+                                    <rect x="5" y="45" width="10" height="30" fill="#2a9d8f" rx="5" />
+                                    <rect x="35" y="45" width="10" height="30" fill="#2a9d8f" rx="5" />
+                                    {/* Piernas */}
+                                    <rect x="17" y="90" width="8" height="10" fill="#2a9d8f" rx="2" />
+                                    <rect x="25" y="90" width="8" height="10" fill="#2a9d8f" rx="2" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {instrumentoSeleccionado && !zonaSeleccionada && (
+                        <Alert variant="default">
+                            <p>Has seleccionado: {instrumentoSeleccionado.icono} {instrumentoSeleccionado.nombre}. Ahora selecciona una zona para explorar.</p>
+                        </Alert>
+                    )}
+
+                    {hallazgo && (
+                        <Alert variant={esNormal ? "default" : "destructive"}>
+                            <h3 className="font-bold">
+                                Exploración de {zonaSeleccionada.nombre} con {instrumentoSeleccionado.nombre}: {esNormal ? "Normal" : "Anormal"}
+                            </h3>
+                            <p>{hallazgo}</p>
+                        </Alert>
+                    )}
+                </div>
+            );
+        };
+
+        ReactDOM.render(<SimuladorExploracionFisica />, document.getElementById('root'));
+    </script>
+</body>
+</html>
